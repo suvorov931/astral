@@ -2,18 +2,19 @@ package config
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 
+	"astral/internal/api"
+	"astral/internal/auth"
 	"astral/internal/logger"
 )
 
 type Config struct {
-	//HttpServer  api.HttpServer
-	//SMTP        SMTPClient.Config
+	HttpServer api.HttpServer
 	//Redis       redisClient.Config
 	//Postgres    postgresClient.Config
+	Auth   auth.Config
 	Logger logger.Config
 }
 
