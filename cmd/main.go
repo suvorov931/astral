@@ -34,7 +34,7 @@ import (
 	"astral/internal/auth"
 	cconfig "astral/internal/config"
 	llogger "astral/internal/logger"
-	ppostgresClient "astral/internal/starage/postgresClient"
+	ppostgresClient "astral/internal/storage/postgresClient"
 )
 
 const (
@@ -79,6 +79,8 @@ func main() {
 
 	router.With(mmiddleware.RequireAdminToken(authService, logger)).
 		Post("/api/register", handler.Register(postgresClient, authService, logger))
+
+	router.Post("/api/auth", handler.Auth(postgresClient, authService, logger))
 
 	//router.Route("/auth", func(r chi.Router) {
 	//	r.With(mmiddleware.AuthMiddleware(authService, postgresClient, logger)).Group(func(r chi.Router) {

@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"crypto/rand"
 	"crypto/subtle"
+	"encoding/base64"
 	"fmt"
 	"regexp"
 
@@ -25,7 +27,7 @@ func (a *Auth) IsAdminToken(token string) bool {
 }
 
 func (a *Auth) ValidateLogin(login string) error {
-	if len(login) < 8 {
+	if len(login) < loginLength {
 		a.logger.Warn("ValidateLogin:", zap.Error(ErrShortLogin))
 		return ErrShortLogin
 	}
@@ -44,20 +46,19 @@ func (a *Auth) ValidateLogin(login string) error {
 }
 
 func (a *Auth) ValidatePassword(password string) error {
-	if len(password) < 8 {
+	if len(password) < passwordLength {
 		a.logger.Warn("ValidatePassword:", zap.Error(ErrShortPassword))
 		return ErrShortPassword
 	}
 
-	var upper, lower int
-	var digit, special bool
+	var upper, lower, digit, special bool
 
 	for _, char := range password {
 		switch {
 		case 'A' <= char && char <= 'Z':
-			upper++
+			upper = true
 		case char >= 'a' && char <= 'z':
-			lower++
+			lower = true
 		case char >= '0' && char <= '9':
 			digit = true
 		default:
@@ -66,17 +67,13 @@ func (a *Auth) ValidatePassword(password string) error {
 	}
 
 	switch {
-	case upper < 0:
+	case !upper:
 		a.logger.Warn("ValidatePassword:", zap.Error(ErrMissingUpper))
 		return ErrMissingUpper
 
-	case lower < 0:
+	case !lower:
 		a.logger.Warn("ValidatePassword:", zap.Error(ErrMissingLower))
 		return ErrMissingLower
-
-	case upper+lower < 2:
-		a.logger.Warn("ValidatePassword:", zap.Error(ErrMissingMixedCase))
-		return ErrMissingMixedCase
 
 	case !digit:
 		a.logger.Warn("ValidatePassword:", zap.Error(ErrMissingDigit))
@@ -85,7 +82,6 @@ func (a *Auth) ValidatePassword(password string) error {
 	case !special:
 		a.logger.Warn("ValidatePassword:", zap.Error(ErrMissingSpecial))
 		return ErrMissingSpecial
-
 	}
 
 	return nil
@@ -99,4 +95,18 @@ func (a *Auth) HashPassword(password string) ([]byte, error) {
 	}
 
 	return hash, nil
+}
+
+func (a *Auth) GenerateToken() (string, error) {
+	buf := make([]byte, a.config.LengthToken)
+
+	_, err := rand.Read(buf)
+	if err != nil {
+		a.logger.Error("GenerateToken: failed to generate token", zap.Error(err))
+		return "", fmt.Errorf("GenerateToken: failed to generate token: %w", err)
+	}
+
+	token := base64.RawURLEncoding.EncodeToString(buf)
+
+	return token, nil
 }

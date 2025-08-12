@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestIsAdminToken(t *testing.T) {
@@ -30,12 +32,12 @@ func TestIsAdminToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			auth := New(&Config{
+			a := New(&Config{
 				AdminToken: tt.realAdminToken},
 				zap.NewNop(),
 			)
 
-			got := auth.IsAdminToken(tt.token)
+			got := a.IsAdminToken(tt.token)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -81,9 +83,9 @@ func TestValidateLogin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			auth := New(&Config{}, zap.NewNop())
+			a := New(&Config{}, zap.NewNop())
 
-			err := auth.ValidateLogin(tt.login)
+			err := a.ValidateLogin(tt.login)
 			require.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -129,10 +131,50 @@ func TestValidatePassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			auth := New(&Config{}, zap.NewNop())
+			a := New(&Config{}, zap.NewNop())
 
-			err := auth.ValidatePassword(tt.password)
+			err := a.ValidatePassword(tt.password)
 			require.ErrorIs(t, err, tt.wantErr)
 		})
 	}
+}
+
+func TestHashPassword(t *testing.T) {
+	a := New(&Config{}, zap.NewNop())
+
+	password := "mySuperSecretPass"
+
+	hash, err := a.HashPassword(password)
+	require.NoError(t, err)
+	require.NotEmpty(t, hash)
+
+	err = bcrypt.CompareHashAndPassword(hash, []byte(password))
+	require.NoError(t, err)
+
+	newHash, err := a.HashPassword(password)
+	require.NoError(t, err)
+	require.NotEmpty(t, newHash)
+
+	require.NotEqual(t, hash, newHash)
+}
+
+func TestGenerateToken(t *testing.T) {
+	a := New(&Config{
+		LengthToken: 10,
+	}, zap.NewNop())
+
+	token, err := a.GenerateToken()
+	require.NoError(t, err)
+	require.NotEmpty(t, token)
+
+	data, err := base64.RawURLEncoding.DecodeString(token)
+	require.NoError(t, err)
+
+	require.Equal(t, a.config.LengthToken, len(data))
+
+	newToken, err := a.GenerateToken()
+	require.NoError(t, err)
+	require.NotEmpty(t, newToken)
+
+	require.NotEqual(t, newToken, token)
 }

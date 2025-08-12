@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -9,7 +8,7 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
-	"astral/internal/starage/postgresClient"
+	"astral/internal/storage/postgresClient"
 )
 
 const sizeLimit = 1 << 20
@@ -63,22 +62,10 @@ func Register(ps postgresClient.PostgresClient, as auth.AuthService, logger *zap
 			}
 		}
 
-		api.WriteResponse(w, logger, user.Login)
+		api.WriteResponseWithLogin(w, logger, user.Login)
 
 		logger.Info("Register: successfully create and save user")
 	}
-}
-
-func decodeBody(w http.ResponseWriter, r *http.Request, user *api.User) error {
-	r.Body = http.MaxBytesReader(w, r.Body, sizeLimit)
-
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(user); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func processValidateError(err error) string {
@@ -92,8 +79,6 @@ func processValidateError(err error) string {
 		return "password must be at least 8 characters"
 	case errors.Is(err, auth.ErrMissingUpper):
 		return "password must contain at least one uppercase letter"
-	case errors.Is(err, auth.ErrMissingMixedCase):
-		return "password must contain at least 2 letters in mixed case"
 	case errors.Is(err, auth.ErrMissingLower):
 		return "password must contain at least one lowercase letter"
 	case errors.Is(err, auth.ErrMissingDigit):

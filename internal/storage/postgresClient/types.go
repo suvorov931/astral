@@ -35,6 +35,7 @@ type PostgresService struct {
 
 type PostgresClient interface {
 	SaveUser(ctx context.Context, login string, passwordHash string) error
+	GetPasswordHash(ctx context.Context, login string) (string, error)
 	Close()
 }
 

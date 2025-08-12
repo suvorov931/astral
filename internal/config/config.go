@@ -8,7 +8,7 @@ import (
 	"astral/internal/api"
 	"astral/internal/auth"
 	"astral/internal/logger"
-	"astral/internal/starage/postgresClient"
+	"astral/internal/storage/postgresClient"
 )
 
 type Config struct {

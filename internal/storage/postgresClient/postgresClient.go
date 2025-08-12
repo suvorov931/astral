@@ -10,6 +10,7 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -45,8 +46,7 @@ func (ps *PostgresService) SaveUser(ctx context.Context, login string, passwordH
 	ctx, cancel := context.WithTimeout(ctx, ps.timeout)
 	defer cancel()
 
-	q := `INSERT INTO schema_users.users (login, password_hash) VALUES ($1, $2)`
-	tag, err := ps.pool.Exec(ctx, q, login, passwordHash)
+	tag, err := ps.pool.Exec(ctx, querySaveUser, login, passwordHash)
 	if err != nil {
 		var pgErr *pgconn.PgError
 
@@ -67,8 +67,28 @@ func (ps *PostgresService) SaveUser(ctx context.Context, login string, passwordH
 	}
 
 	ps.logger.Info("SaveUser: successfully save user")
-
 	return nil
+}
+
+func (ps *PostgresService) GetPasswordHash(ctx context.Context, login string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, ps.timeout)
+	defer cancel()
+
+	var passwordHash string
+
+	err := ps.pool.QueryRow(ctx, queryGetPasswordHash, login).Scan(&passwordHash)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ps.logger.Warn("GetPasswordHash: no password hash found")
+			return "", err
+		}
+
+		ps.logger.Error("GetPasswordHash: failed to get password hash", zap.Error(err))
+		return "", fmt.Errorf("GetPasswordHash: failed to get password hash: %w", err)
+	}
+
+	ps.logger.Info("GetPasswordHash: successfully get password hash")
+	return passwordHash, nil
 }
 
 func (ps *PostgresService) Close() {

@@ -36,9 +36,10 @@ func WriteError(w http.ResponseWriter, logger *zap.Logger, code int, text string
 
 type Response struct {
 	Login string `json:"login,omitempty"`
+	Token string `json:"token,omitempty"`
 }
 
-func WriteResponse(w http.ResponseWriter, logger *zap.Logger, login string) {
+func WriteResponseWithLogin(w http.ResponseWriter, logger *zap.Logger, login string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -50,6 +51,22 @@ func WriteResponse(w http.ResponseWriter, logger *zap.Logger, login string) {
 
 	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		logger.Error("WriteResponse: failed to encode response", zap.Error(err))
+		logger.Error("WriteResponseWithLogin: failed to encode response", zap.Error(err))
+	}
+}
+
+func WriteResponseWithToken(w http.ResponseWriter, logger *zap.Logger, token string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	resp := mainResponse{
+		Response: &Response{
+			Token: token,
+		},
+	}
+
+	err := json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		logger.Error("WriteResponseWithToken: failed to encode response", zap.Error(err))
 	}
 }
