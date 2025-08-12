@@ -82,15 +82,6 @@ func main() {
 
 	router.Post("/api/auth", handler.Auth(postgresClient, authService, logger))
 
-	//router.Route("/auth", func(r chi.Router) {
-	//	r.With(mmiddleware.AuthMiddleware(authService, postgresClient, logger)).Group(func(r chi.Router) {
-	//		r.Post("/logout", handlers.LogoutHandler(authService, postgresClient, logger))
-	//		r.Post("/refresh", handlers.RefreshHandler(authService, postgresClient, &config.HttpServer, logger))
-	//	})
-	//
-	//	r.Post("/tokens", handlers.CreateTokensHandler(authService, postgresClient, logger))
-	//})
-
 	server := http.Server{
 		Addr:    fmt.Sprintf("%s:%d", config.HttpServer.Host, config.HttpServer.Port),
 		Handler: router,
