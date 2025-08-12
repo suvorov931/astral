@@ -8,12 +8,13 @@ import (
 )
 
 type mainResponse struct {
-	errorResponse `json:"error"`
+	ErrorResponse *ErrorResponse `json:"error,omitempty"`
+	Response      *Response      `json:"response,omitempty"`
 }
 
-type errorResponse struct {
-	Code int    `json:"code"`
-	Text string `json:"text"`
+type ErrorResponse struct {
+	Code int    `json:"code,omitempty"`
+	Text string `json:"text,omitempty"`
 }
 
 func WriteError(w http.ResponseWriter, logger *zap.Logger, code int, text string) {
@@ -21,7 +22,7 @@ func WriteError(w http.ResponseWriter, logger *zap.Logger, code int, text string
 	w.WriteHeader(code)
 
 	resp := mainResponse{
-		errorResponse: errorResponse{
+		ErrorResponse: &ErrorResponse{
 			Code: code,
 			Text: text,
 		},
@@ -30,5 +31,25 @@ func WriteError(w http.ResponseWriter, logger *zap.Logger, code int, text string
 	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		logger.Error("WriteError: failed to encode response", zap.Error(err))
+	}
+}
+
+type Response struct {
+	Login string `json:"login,omitempty"`
+}
+
+func WriteResponse(w http.ResponseWriter, logger *zap.Logger, login string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	resp := mainResponse{
+		Response: &Response{
+			Login: login,
+		},
+	}
+
+	err := json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		logger.Error("WriteResponse: failed to encode response", zap.Error(err))
 	}
 }

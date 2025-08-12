@@ -8,14 +8,14 @@ import (
 	"astral/internal/api"
 	"astral/internal/auth"
 	"astral/internal/logger"
+	"astral/internal/starage/postgresClient"
 )
 
 type Config struct {
 	HttpServer api.HttpServer
-	//Redis       redisClient.Config
-	//Postgres    postgresClient.Config
-	Auth   auth.Config
-	Logger logger.Config
+	Postgres   postgresClient.Config
+	Auth       auth.Config
+	Logger     logger.Config
 }
 
 func New(path string) (*Config, error) {

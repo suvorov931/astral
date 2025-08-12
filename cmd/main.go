@@ -34,12 +34,13 @@ import (
 	"astral/internal/auth"
 	cconfig "astral/internal/config"
 	llogger "astral/internal/logger"
+	ppostgresClient "astral/internal/starage/postgresClient"
 )
 
 const (
-	pathToConfigFile     = "./config/config.env"
-	pathToMigrationsFile = "file://./database/migrations"
-	shoutdownTime        = 15 * time.Second
+	pathToConfig     = "./config/config.env"
+	pathToMigrations = "file://./database/migrations"
+	shoutdownTime    = 15 * time.Second
 )
 
 func main() {
@@ -50,7 +51,7 @@ func main() {
 	)
 	defer cancel()
 
-	config, err := cconfig.New(pathToConfigFile)
+	config, err := cconfig.New(pathToConfig)
 	if err != nil {
 		log.Fatalf("failed to initialize config: %v", err)
 	}
@@ -60,6 +61,11 @@ func main() {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
 	defer logger.Sync()
+
+	postgresClient, err := ppostgresClient.New(ctx, &config.Postgres, logger, pathToMigrations)
+	if err != nil {
+		logger.Fatal("failed to initialize postgres client", zap.Error(err))
+	}
 
 	router := chi.NewRouter()
 
@@ -72,7 +78,7 @@ func main() {
 	authService := auth.New(&config.Auth, logger)
 
 	router.With(mmiddleware.RequireAdminToken(authService, logger)).
-		Post("/api/register", handler.Register(logger))
+		Post("/api/register", handler.Register(postgresClient, authService, logger))
 
 	//router.Route("/auth", func(r chi.Router) {
 	//	r.With(mmiddleware.AuthMiddleware(authService, postgresClient, logger)).Group(func(r chi.Router) {
