@@ -26,8 +26,8 @@ var (
 )
 
 type Config struct {
-	AdminToken  string `env:"ADMIN_TOKEN"`
-	LengthToken int    `env:"LENGTH_TOKEN"`
+	AdminToken  string `env:"ADMIN_TOKEN" env-required:"true"`
+	LengthToken int    `env:"LENGTH_TOKEN" env-required:"true"`
 }
 
 type Auth struct {

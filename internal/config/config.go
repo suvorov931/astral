@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	HttpServer api.HttpServer
-	Postgres   postgresClient.Config
-	Auth       auth.Config
-	Logger     logger.Config
+	HttpServer api.HttpServer        `env-required:"true"`
+	Postgres   postgresClient.Config `env-required:"true"`
+	Auth       auth.Config           `env-required:"true"`
+	Logger     logger.Config         `env-required:"true"`
 }
 
 func New(path string) (*Config, error) {
