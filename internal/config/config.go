@@ -7,14 +7,16 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
+	redisClient "astral/internal/cache/redisCLient"
 	"astral/internal/logger"
 	"astral/internal/storage/postgresClient"
 )
 
 type Config struct {
 	HttpServer api.HttpServer        `env-required:"true"`
-	Postgres   postgresClient.Config `env-required:"true"`
 	Auth       auth.Config           `env-required:"true"`
+	Redis      redisClient.Config    `env-required:"true"`
+	Postgres   postgresClient.Config `env-required:"true"`
 	Logger     logger.Config         `env-required:"true"`
 }
 

@@ -41,6 +41,7 @@ type AuthService interface {
 	ValidatePassword(password string) error
 	HashPassword(password string) ([]byte, error)
 	GenerateToken() (string, error)
+	GenerateSha(token string) string
 }
 
 type MockAuthService struct {

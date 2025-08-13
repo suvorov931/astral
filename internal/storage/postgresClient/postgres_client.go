@@ -17,10 +17,6 @@ import (
 )
 
 func New(ctx context.Context, config *Config, logger *zap.Logger, migrationsPath string) (*PostgresService, error) {
-	if config.Timeout == 0 {
-		config.Timeout = DefaultPostgresTimeout
-	}
-
 	url := buildURL(config)
 	dsn := buildDSN(config)
 

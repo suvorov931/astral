@@ -10,8 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const DefaultPostgresTimeout = 3 * time.Second
-
 type Config struct {
 	Host     string        `env:"POSTGRES_HOST" env-required:"true"`
 	Port     string        `env:"POSTGRES_PORT" env-required:"true"`

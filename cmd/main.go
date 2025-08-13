@@ -32,6 +32,7 @@ import (
 	"astral/internal/api/handler"
 	mmiddleware "astral/internal/api/middleware"
 	"astral/internal/auth"
+	rredisClient "astral/internal/cache/redisCLient"
 	cconfig "astral/internal/config"
 	llogger "astral/internal/logger"
 	ppostgresClient "astral/internal/storage/postgresClient"
@@ -67,6 +68,11 @@ func main() {
 		logger.Fatal("failed to initialize postgres client", zap.Error(err))
 	}
 
+	redisClient, err := rredisClient.New(ctx, &config.Redis, logger)
+	if err != nil {
+		logger.Fatal("failed to initialize redis client", zap.Error(err))
+	}
+
 	router := chi.NewRouter()
 
 	router.Use(middleware.RealIP)
@@ -80,7 +86,7 @@ func main() {
 	router.With(mmiddleware.RequireAdminToken(authService, logger)).
 		Post("/api/register", handler.Register(postgresClient, authService, logger))
 
-	router.Post("/api/auth", handler.Auth(postgresClient, authService, logger))
+	router.Post("/api/auth", handler.Auth(postgresClient, redisClient, authService, logger))
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("%s:%d", config.HttpServer.Host, config.HttpServer.Port),

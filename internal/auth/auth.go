@@ -2,8 +2,10 @@ package auth
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 
@@ -109,4 +111,12 @@ func (a *Auth) GenerateToken() (string, error) {
 	token := base64.RawURLEncoding.EncodeToString(buf)
 
 	return token, nil
+}
+
+func (a *Auth) GenerateSha(token string) string {
+	shaHash := sha256.Sum256([]byte(token))
+
+	hashString := hex.EncodeToString(shaHash[:])
+
+	return hashString
 }

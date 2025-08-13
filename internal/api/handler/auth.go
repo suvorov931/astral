@@ -10,10 +10,11 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
+	redisClient "astral/internal/cache/redisCLient"
 	"astral/internal/storage/postgresClient"
 )
 
-func Auth(ps postgresClient.PostgresClient, as auth.AuthService, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
+func Auth(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as auth.AuthService, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -26,7 +27,7 @@ func Auth(ps postgresClient.PostgresClient, as auth.AuthService, logger *zap.Log
 			return
 		}
 
-		storedHash, err := ps.GetPasswordHash(ctx, user.Login)
+		storedHash, err := pc.GetPasswordHash(ctx, user.Login)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				api.WriteError(w, logger, http.StatusUnauthorized, "user not found")
@@ -53,8 +54,17 @@ func Auth(ps postgresClient.PostgresClient, as auth.AuthService, logger *zap.Log
 			return
 		}
 
+		tokenHash := as.GenerateSha(token)
+
+		err = rc.SaveToken(ctx, user.Login, tokenHash)
+		if err != nil {
+			api.WriteError(w, logger, http.StatusInternalServerError, "cannot save token")
+			logger.Error("Auth: cannot save token", zap.Error(err))
+			return
+		}
+
 		api.WriteResponseWithToken(w, logger, token)
-		logger.Info("Auth: successfully validate user and generate token")
+		logger.Info("Auth: successfully validate user, generate and save token")
 	}
 }
 
