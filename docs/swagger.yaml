@@ -1,0 +1,164 @@
+basePath: /
+definitions:
+  api.Data:
+    properties:
+      file:
+        type: string
+      json: {}
+    type: object
+  api.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      text:
+        type: string
+    type: object
+  api.Response:
+    properties:
+      login:
+        type: string
+      token:
+        type: string
+    type: object
+  api.User:
+    properties:
+      login:
+        type: string
+      pswd:
+        type: string
+    type: object
+  api.mainResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.Data'
+      error:
+        $ref: '#/definitions/api.ErrorResponse'
+      response:
+        $ref: '#/definitions/api.Response'
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: API for user registration, authentication and document upload.
+  termsOfService: http://example.com/terms/
+  title: Astral Authentication & Documents API
+  version: "1.0"
+paths:
+  /api/auth:
+    post:
+      consumes:
+      - application/json
+      description: Validate user credentials and return generated token. Token is
+        stored server-side (redis) as hashed value.
+      parameters:
+      - description: User credentials (login + password)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/api.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns generated token in response
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "401":
+          description: User not found or invalid password
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "500":
+          description: Server error (DB/Redis/Token generation)
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+      summary: Authenticate user and return token
+      tags:
+      - auth
+  /api/docs:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a document (file or JSON). The request is multipart/form-data.
+      parameters:
+      - description: 'JSON string with metadata. Example: {\'
+        in: formData
+        name: meta
+        required: true
+        type: string
+      - description: File to upload (required if meta.file is true)
+        in: formData
+        name: file
+        type: file
+      - description: Optional JSON payload (when not uploading a binary file)
+        in: formData
+        name: json
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns document JSON (if any) and file name
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "400":
+          description: Invalid form data / missing meta / missing file
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "401":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "500":
+          description: Server error (DB/Redis/IO)
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+      summary: Upload or create a document
+      tags:
+      - docs
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user. This endpoint is protected by an admin token
+        middleware.
+      parameters:
+      - description: User credentials (login + password)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/api.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns created login
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "400":
+          description: Validation error or duplicate login
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/api.mainResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

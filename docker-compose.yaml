@@ -3,6 +3,24 @@ networks:
     driver: bridge
 
 services:
+  astral-service:
+    container_name: astral-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: astral-service
+    env_file:
+      - config/config.env
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - astral-net
+
   postgres:
     image: postgres:17.5
     container_name: postgres

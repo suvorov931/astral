@@ -22,7 +22,7 @@ func RequireAdminToken(as auth.AuthService, logger *zap.Logger) func(http.Handle
 				logger.Error("RequireAdminToken:", zap.Error(err))
 				return
 			}
-
+			fmt.Println(header)
 			token, err := extractToken(header)
 			if err != nil {
 				api.WriteError(w, logger, http.StatusUnauthorized, "Invalid authorization header format")

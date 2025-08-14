@@ -1,10 +1,15 @@
-// @title Authentication-Service API
-// @version 1.0
-// @description Документация API Authentication-Service
-// @host localhost:8082
-// @BasePath /
-// @schemes http
-
+// @title           Astral Authentication & Documents API
+// @version         1.0
+// @description     API for user registration, authentication and document upload.
+// @termsOfService  http://example.com/terms/
+//
+// @contact.name   API Support
+// @contact.url    http://www.example.com/support
+// @contact.email  support@example.com
+//
+// @host      localhost:8080
+// @BasePath  /
+//
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
@@ -23,11 +28,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/swaggo/http-swagger"
+
+	_ "astral/docs"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
-
-	//_ "authentication-service/docs"
 
 	"astral/internal/api/handler"
 	mmiddleware "astral/internal/api/middleware"
@@ -88,6 +95,8 @@ func main() {
 
 	router.Post("/api/auth", handler.Auth(postgresClient, redisClient, authService, logger))
 	router.Post("/api/docs", handler.LoadDocs(postgresClient, redisClient, authService, logger))
+
+	router.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("%s:%d", config.HttpServer.Host, config.HttpServer.Port),

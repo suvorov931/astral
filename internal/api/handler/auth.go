@@ -14,6 +14,18 @@ import (
 	"astral/internal/storage/postgresClient"
 )
 
+// Auth godoc
+// @Summary      Authenticate user and return token
+// @Description  Validate user credentials and return generated token. Token is stored server-side (redis) as hashed value.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body      api.User  true  "User credentials (login + password)"
+// @Success      200   {object}  api.mainResponse  "Returns generated token in response"
+// @Failure      400   {object}  api.mainResponse  "Invalid request body"
+// @Failure      401   {object}  api.mainResponse  "User not found or invalid password"
+// @Failure      500   {object}  api.mainResponse  "Server error (DB/Redis/Token generation)"
+// @Router       /api/auth [post]
 func Auth(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as auth.AuthService, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -67,5 +79,3 @@ func Auth(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as auth.
 		logger.Info("Auth: successfully validate user, generate and save token")
 	}
 }
-
-// TODO: somehow store hash

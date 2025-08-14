@@ -19,6 +19,20 @@ import (
 
 const maxLoadSize = 50 << 20
 
+// LoadDocs godoc
+// @Summary      Upload or create a document
+// @Description  Upload a document (file or JSON). The request is multipart/form-data.
+// @Tags         docs
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        meta  formData  string  true   "JSON string with metadata. Example: {\"name\":\"file.txt\",\"file\":true,\"public\":false,\"token\":\"...\",\"mime\":\"text/plain\",\"grant\":[\"user1\"]}"
+// @Param        file  formData  file    false  "File to upload (required if meta.file is true)"
+// @Param        json  formData  string  false  "Optional JSON payload (when not uploading a binary file)"
+// @Success      200   {object}  api.mainResponse  "Returns document JSON (if any) and file name"
+// @Failure      400   {object}  api.mainResponse  "Invalid form data / missing meta / missing file"
+// @Failure      401   {object}  api.mainResponse  "Invalid token"
+// @Failure      500   {object}  api.mainResponse  "Server error (DB/Redis/IO)"
+// @Router       /api/docs [post]
 func LoadDocs(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as auth.AuthService, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

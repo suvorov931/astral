@@ -13,6 +13,18 @@ import (
 
 const sizeLimit = 1 << 20
 
+// Register godoc
+// @Summary      Create a new user
+// @Description  Create a new user. This endpoint is protected by an admin token middleware.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body      api.User  true  "User credentials (login + password)"
+// @Success      200   {object}  api.mainResponse  "Returns created login"
+// @Failure      400   {object}  api.mainResponse  "Validation error or duplicate login"
+// @Failure      500   {object}  api.mainResponse  "Server error"
+// @Security     BearerAuth
+// @Router       /api/register [post]
 func Register(ps postgresClient.PostgresClient, as auth.AuthService, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
