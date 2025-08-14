@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 
-	"astral/internal/api"
+	"astral/internal/documents"
 )
 
 type Config struct {
@@ -36,7 +36,7 @@ type PostgresService struct {
 type PostgresClient interface {
 	SaveUser(ctx context.Context, login string, passwordHash string) error
 	GetPasswordHash(ctx context.Context, login string) (string, error)
-	SaveDocument(ctx context.Context, document *api.Document) error
+	SaveDocument(ctx context.Context, document *documents.Document) error
 	Close()
 }
 

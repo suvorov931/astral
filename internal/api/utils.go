@@ -10,6 +10,7 @@ import (
 type mainResponse struct {
 	ErrorResponse *ErrorResponse `json:"error,omitempty"`
 	Response      *Response      `json:"response,omitempty"`
+	Data          *Data          `json:"data,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -68,5 +69,27 @@ func WriteResponseWithToken(w http.ResponseWriter, logger *zap.Logger, token str
 	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		logger.Error("WriteResponseWithToken: failed to encode response", zap.Error(err))
+	}
+}
+
+type Data struct {
+	JSON interface{} `json:"json,omitempty"`
+	File string      `json:"file,omitempty"`
+}
+
+func WriteResponseWithData(w http.ResponseWriter, logger *zap.Logger, jsonData interface{}, fileName string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	resp := mainResponse{
+		Data: &Data{
+			JSON: jsonData,
+			File: fileName,
+		},
+	}
+
+	err := json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		logger.Error("WriteResponseWithData: failed to encode response", zap.Error(err))
 	}
 }

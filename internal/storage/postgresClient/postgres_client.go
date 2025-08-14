@@ -15,7 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
-	"astral/internal/api"
+	"astral/internal/documents"
 )
 
 // TODO: добавить проверки на закрытый контекст, в частности в SaveDocument
@@ -91,7 +91,7 @@ func (ps *PostgresService) GetPasswordHash(ctx context.Context, login string) (s
 	return passwordHash, nil
 }
 
-func (ps *PostgresService) SaveDocument(ctx context.Context, document *api.Document) error {
+func (ps *PostgresService) SaveDocument(ctx context.Context, document *documents.Document) error {
 	ctx, cancel := context.WithTimeout(ctx, ps.timeout)
 	defer cancel()
 
@@ -106,10 +106,7 @@ func (ps *PostgresService) SaveDocument(ctx context.Context, document *api.Docum
 		}
 	}()
 
-	qDoc := `INSERT INTO schema_astral.documents (id, login, name, mime, is_file, is_public, content, json, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
-
-	tag, err := tx.Exec(ctx, qDoc,
+	tag, err := tx.Exec(ctx, querySaveDocument,
 		document.Id,
 		document.Login,
 		document.Name,
@@ -130,13 +127,8 @@ func (ps *PostgresService) SaveDocument(ctx context.Context, document *api.Docum
 		return fmt.Errorf("SaveDocument: no rows affected")
 	}
 
-	qGrant := `
-    INSERT INTO schema_astral.documents_grants (doc_id, grantee_login)
-    VALUES ($1,$2)
-    `
-
 	for _, grantee := range document.Grant {
-		tag, err = tx.Exec(ctx, qGrant, document.Id, grantee)
+		tag, err = tx.Exec(ctx, querySaveDocumentGrant, document.Id, grantee)
 		if err != nil {
 			return fmt.Errorf("SaveDocument: failed to save grant: %w", err)
 		}

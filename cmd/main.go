@@ -120,6 +120,6 @@ func main() {
 	logger.Info("application shutdown completed successfully")
 }
 
-// TODO: написать в примечании что в grant можно добавлять только существующих юзеров
+// TODO: написать в примечании что в grant можно добавлять только существующих пользователей
 // TODO: documentation
 // TODO: tests
