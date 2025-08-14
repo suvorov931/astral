@@ -7,7 +7,11 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
+
+	"astral/internal/documents"
 )
+
+const batchSize = 200
 
 type Config struct {
 	Host     string        `env:"REDIS_HOST" env-required:"true"`
@@ -32,6 +36,8 @@ type RedisService struct {
 type RedisClient interface {
 	SaveToken(ctx context.Context, key string, token string) error
 	GetLoginByToken(ctx context.Context, token string) (string, error)
+	CacheDocument(ctx context.Context, document *documents.Document) error
+	InvalidateDocs(ctx context.Context, login string) error
 	Close()
 }
 

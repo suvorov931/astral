@@ -113,13 +113,15 @@ func LoadDocs(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as a
 			return
 		}
 
-		//if err := rc.InvalidateUserDocsList(ctx, document.Login); err != nil {
-		//	logger.Warn("LoadDocs: failed to invalidate docs list cache", zap.Error(err))
-		//}
-		//if err := rc.InvalidateDoc(ctx, document.Id); err != nil {
-		//	logger.Warn("LoadDocs: failed to invalidate doc cache", zap.Error(err))
-		//}
-		//
+		err = rc.CacheDocument(ctx, &document)
+		if err != nil {
+			logger.Warn("LoadDocs: failed to cache document", zap.Error(err))
+		}
+
+		if err := rc.InvalidateDocs(ctx, document.Login); err != nil {
+			logger.Warn("LoadDocs: failed to invalidate doc cache", zap.Error(err))
+		}
+
 		var jsonData interface{}
 		if len(document.JSON) > 0 {
 			if err := json.Unmarshal(document.JSON, &jsonData); err != nil {

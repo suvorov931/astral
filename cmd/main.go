@@ -113,7 +113,8 @@ func main() {
 		return
 	}
 
-	//postgresClient.Close()
+	postgresClient.Close()
+	redisClient.Close()
 
 	logger.Info("stopping http server", zap.String("addr", server.Addr))
 
