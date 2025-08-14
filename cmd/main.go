@@ -87,6 +87,7 @@ func main() {
 		Post("/api/register", handler.Register(postgresClient, authService, logger))
 
 	router.Post("/api/auth", handler.Auth(postgresClient, redisClient, authService, logger))
+	router.Post("/api/docs", handler.LoadDocs(postgresClient, redisClient, authService, logger))
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("%s:%d", config.HttpServer.Host, config.HttpServer.Port),
@@ -119,5 +120,6 @@ func main() {
 	logger.Info("application shutdown completed successfully")
 }
 
+// TODO: написать в примечании что в grant можно добавлять только существующих юзеров
 // TODO: documentation
 // TODO: tests

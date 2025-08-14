@@ -14,7 +14,11 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
+
+	"astral/internal/api"
 )
+
+// TODO: добавить проверки на закрытый контекст, в частности в SaveDocument
 
 func New(ctx context.Context, config *Config, logger *zap.Logger, migrationsPath string) (*PostgresService, error) {
 	url := buildURL(config)
@@ -53,8 +57,8 @@ func (ps *PostgresService) SaveUser(ctx context.Context, login string, passwordH
 			}
 		}
 
-		ps.logger.Error("SaveUser: failed to save user into database:", zap.Error(err))
-		return fmt.Errorf("SaveUser: failed to save user into database: %w", err)
+		ps.logger.Error("SaveUser: failed to save user:", zap.Error(err))
+		return fmt.Errorf("SaveUser: failed to save user: %w", err)
 	}
 
 	if tag.RowsAffected() == 0 {
@@ -85,6 +89,72 @@ func (ps *PostgresService) GetPasswordHash(ctx context.Context, login string) (s
 
 	ps.logger.Info("GetPasswordHash: successfully get password hash")
 	return passwordHash, nil
+}
+
+func (ps *PostgresService) SaveDocument(ctx context.Context, document *api.Document) error {
+	ctx, cancel := context.WithTimeout(ctx, ps.timeout)
+	defer cancel()
+
+	tx, err := ps.pool.Begin(ctx)
+	if err != nil {
+		ps.logger.Error("SaveDocument: failed to begin transaction", zap.Error(err))
+		return fmt.Errorf("SaveDocument: failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err = tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+			ps.logger.Warn("SaveDocument: rollback failed", zap.Error(err))
+		}
+	}()
+
+	qDoc := `INSERT INTO schema_astral.documents (id, login, name, mime, is_file, is_public, content, json, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+
+	tag, err := tx.Exec(ctx, qDoc,
+		document.Id,
+		document.Login,
+		document.Name,
+		document.Mime,
+		document.File,
+		document.Public,
+		document.Content,
+		document.JSON,
+		document.CreatedAt,
+	)
+	if err != nil {
+		ps.logger.Error("SaveDocument: failed to save document", zap.Error(err))
+		return fmt.Errorf("SaveDocument: failed to save document: %w", err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		ps.logger.Error("SaveDocument: no rows affected")
+		return fmt.Errorf("SaveDocument: no rows affected")
+	}
+
+	qGrant := `
+    INSERT INTO schema_astral.documents_grants (doc_id, grantee_login)
+    VALUES ($1,$2)
+    `
+
+	for _, grantee := range document.Grant {
+		tag, err = tx.Exec(ctx, qGrant, document.Id, grantee)
+		if err != nil {
+			return fmt.Errorf("SaveDocument: failed to save grant: %w", err)
+		}
+
+		if tag.RowsAffected() == 0 {
+			ps.logger.Error("SaveDocument: no rows affected")
+			return fmt.Errorf("SaveDocument: no rows affected")
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		ps.logger.Error("SaveDocument: failed to commit transaction", zap.Error(err))
+		return fmt.Errorf("SaveDocument: failed to commit transaction: %w", err)
+	}
+
+	ps.logger.Info("SaveDocument: successfully save document")
+	return nil
 }
 
 func (ps *PostgresService) Close() {

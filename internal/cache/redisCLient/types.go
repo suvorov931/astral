@@ -31,6 +31,7 @@ type RedisService struct {
 
 type RedisClient interface {
 	SaveToken(ctx context.Context, key string, token string) error
+	GetLoginByToken(ctx context.Context, token string) (string, error)
 	Close()
 }
 
