@@ -48,7 +48,7 @@ import (
 const (
 	pathToConfig     = "./config/config.env"
 	pathToMigrations = "file://./database/migrations"
-	shoutdownTime    = 15 * time.Second
+	shutdownTime     = 15 * time.Second
 )
 
 func main() {
@@ -114,7 +114,7 @@ func main() {
 
 	logger.Info("received shutdown signal")
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shoutdownTime)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTime)
 	defer shutdownCancel()
 
 	if err = server.Shutdown(shutdownCtx); err != nil {
