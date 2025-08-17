@@ -34,8 +34,17 @@ type RedisService struct {
 }
 
 type RedisClient interface {
+	TokenStore
+	DocCache
+	Close()
+}
+
+type TokenStore interface {
 	SaveToken(ctx context.Context, key string, token string) error
 	GetLoginByToken(ctx context.Context, token string) (string, error)
+}
+
+type DocCache interface {
 	CacheDocument(ctx context.Context, document *documents.Document) error
 	InvalidateDocs(ctx context.Context, login string) error
 	Close()

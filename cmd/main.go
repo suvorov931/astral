@@ -31,6 +31,7 @@ import (
 	"github.com/swaggo/http-swagger"
 
 	_ "astral/docs"
+	rredisClient "astral/internal/storage/redis_client"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -39,16 +40,15 @@ import (
 	"astral/internal/api/handler"
 	mmiddleware "astral/internal/api/middleware"
 	"astral/internal/auth"
-	rredisClient "astral/internal/cache/redisCLient"
 	cconfig "astral/internal/config"
 	llogger "astral/internal/logger"
-	ppostgresClient "astral/internal/storage/postgresClient"
+	ppostgresClient "astral/internal/storage/postgres_client"
 )
 
 const (
 	pathToConfig     = "./config/config.env"
 	pathToMigrations = "file://./database/migrations"
-	shoutdownTime    = 15 * time.Second
+	shutdownTime     = 15 * time.Second
 )
 
 func main() {
@@ -114,7 +114,7 @@ func main() {
 
 	logger.Info("received shutdown signal")
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shoutdownTime)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTime)
 	defer shutdownCancel()
 
 	if err = server.Shutdown(shutdownCtx); err != nil {

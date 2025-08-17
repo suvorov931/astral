@@ -7,9 +7,9 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
-	redisClient "astral/internal/cache/redisCLient"
 	"astral/internal/logger"
-	"astral/internal/storage/postgresClient"
+	"astral/internal/storage/postgres_client"
+	"astral/internal/storage/redis_client"
 )
 
 type Config struct {
