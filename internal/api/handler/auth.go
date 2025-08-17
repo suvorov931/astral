@@ -10,8 +10,8 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
-	redisClient "astral/internal/cache/redisCLient"
-	"astral/internal/storage/postgresClient"
+	"astral/internal/storage/postgres_client"
+	"astral/internal/storage/redis_client"
 )
 
 // Auth godoc

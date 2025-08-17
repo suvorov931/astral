@@ -31,6 +31,7 @@ import (
 	"github.com/swaggo/http-swagger"
 
 	_ "astral/docs"
+	rredisClient "astral/internal/storage/redis_client"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -39,10 +40,9 @@ import (
 	"astral/internal/api/handler"
 	mmiddleware "astral/internal/api/middleware"
 	"astral/internal/auth"
-	rredisClient "astral/internal/cache/redisCLient"
 	cconfig "astral/internal/config"
 	llogger "astral/internal/logger"
-	ppostgresClient "astral/internal/storage/postgresClient"
+	ppostgresClient "astral/internal/storage/postgres_client"
 )
 
 const (

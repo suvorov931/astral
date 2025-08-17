@@ -8,7 +8,7 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
-	"astral/internal/storage/postgresClient"
+	"astral/internal/storage/postgres_client"
 )
 
 const sizeLimit = 1 << 20

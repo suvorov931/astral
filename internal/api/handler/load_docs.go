@@ -12,9 +12,9 @@ import (
 
 	"astral/internal/api"
 	"astral/internal/auth"
-	redisClient "astral/internal/cache/redisCLient"
 	"astral/internal/documents"
-	"astral/internal/storage/postgresClient"
+	"astral/internal/storage/postgres_client"
+	"astral/internal/storage/redis_client"
 )
 
 const maxLoadSize = 50 << 20
@@ -79,7 +79,7 @@ func LoadDocs(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as a
 
 		id := uuid.NewString()
 
-		document := documents.Document{
+		document := &documents.Document{
 			Id:        id,
 			Login:     login,
 			Name:      meta.Name,
@@ -120,19 +120,20 @@ func LoadDocs(pc postgresClient.PostgresClient, rc redisClient.RedisClient, as a
 			document.Content = content
 		}
 
-		err = pc.SaveDocument(ctx, &document)
+		err = pc.SaveDocument(ctx, document)
 		if err != nil {
 			api.WriteError(w, logger, http.StatusInternalServerError, "failed to save document")
 			logger.Error("LoadDocs: failed save document", zap.Error(err))
 			return
 		}
 
-		err = rc.CacheDocument(ctx, &document)
+		err = rc.CacheDocument(ctx, document)
 		if err != nil {
 			logger.Warn("LoadDocs: failed to cache document", zap.Error(err))
 		}
 
-		if err := rc.InvalidateDocs(ctx, document.Login); err != nil {
+		err = rc.InvalidateDocs(ctx, document.Login)
+		if err != nil {
 			logger.Warn("LoadDocs: failed to invalidate doc cache", zap.Error(err))
 		}
 
